@@ -1,4 +1,8 @@
-﻿import time
+﻿import pytest
+import time
+from src.pages.login_page import LoginPage
+
+@pytest.mark.ui     # ← добавили маркер
 def test_login_success(page):
     """
     простой smoke-тест: открываем saucedemo, логинимся стандартным пользователем
