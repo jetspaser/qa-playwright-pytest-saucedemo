@@ -1,27 +1,47 @@
 ﻿import pytest
 import time
 from src.pages.login_page import LoginPage
+from src.pages.inventory_page import InventoryPage
 
-@pytest.mark.ui     # ← добавили маркер
-def test_login_success(page):
+
+@pytest.mark.ui
+def test_login_wrong_password(page, base_url):
     """
-    простой smoke-тест: открываем saucedemo, логинимся стандартным пользователем
-    и проверяем, что произошёл переход на страницу inventory.
+    Негативный тест: логин с неправильным паролем
+    должен показывать пользователю сообщение об ошибке.
     """
-    base = "https://www.saucedemo.com/"
-    page.goto(base)
+    login_page = LoginPage(page)
 
-    # вводим действенные тестовые данные (они известны для SauceDemo)
-    page.fill("input#user-name", "standard_user")
-    page.fill("input#password", "secret_sauce")
-    page.click("input#login-button")
+    # Шаг 1: открыли страницу логина
+    login_page.open(base_url)
 
-    # подождём коротко, пока страница загрузится (Playwright обычно авто-ожидает)
-    page.wait_for_url("**/inventory.html", timeout=5000)
+    # Шаг 2: вводим неверный пароль
+    login_page.login("standard_user", "wrong_pass")
 
-    # убеждаемся, что URL содержит inventory и что список товаров виден
-    assert "inventory" in page.url
-    assert page.is_visible(".inventory_list")
+    # Шаг 3: проверяем, что появилось сообщение об ошибке
+    assert login_page.is_error_visible(), "Ошибка не отображается!"
 
-    # немного паузы визуально (если headless=False), чтобы виден был результат
-    time.sleep(1)
+    # Шаг 4: проверяем сам текст ошибки
+    text = login_page.get_error_text()
+    assert "do not match" in text, "Текст ошибки неверный!"
+
+@pytest.mark.ui
+def test_login_wrong_username(page, base_url):
+    """
+    Негативный тест: логин с неправильным username
+    должен показывать ошибку на странице.
+    """
+    login_page = LoginPage(page)
+
+    # Шаг 1: открыли страницу логина
+    login_page.open(base_url)
+
+    # Шаг 2: вводим неверный логин
+    login_page.login("wrong_user", "secret_sauce")
+
+    # Шаг 3: проверяем, что появилось сообщение об ошибке
+    assert login_page.is_error_visible(), "Ошибка не отображается!"
+
+    # Шаг 4: проверяем текст ошибки
+    text = login_page.get_error_text()
+    assert "do not match" in text or "Username and password" in text, "Текст ошибки неверный!"
