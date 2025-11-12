@@ -16,3 +16,6 @@ __pycache__/
 reports/
 playwright-report/
 test-results/
+
+# Test reports and assets
+reports/
