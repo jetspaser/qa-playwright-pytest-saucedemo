@@ -7,6 +7,14 @@ class InventoryPage:
     def is_loaded(self):
         return self.page.is_visible(self.INVENTORY_LIST)
 
+def get_items_count(self):
+    """
+    Возвращает количество товаров на странице.
+    Это простая вспомогательная функция, пригодится для smoke-тестов.
+    """
+    return self.page.locator(self.ITEMS).count()
+
+
 class InventoryPage:
     # ====== Локаторы ======
     INVENTORY_LIST = ".inventory_list"
