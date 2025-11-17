@@ -38,3 +38,25 @@ def test_open_product_from_inventory(page, base_url):
     assert inventory_page.is_product_page_open(first_item_name), "Product page not opened!"
 
     time.sleep(1)
+
+@pytest.mark.ui
+def test_sort_by_name_atoz(page, base_url):
+    """
+    Проверяем сортировку товаров по имени (A → Z).
+    """
+    login_page = LoginPage(page)
+    inventory_page = InventoryPage(page)
+
+    # Логинимся
+    login_page.open(base_url)
+    login_page.login("standard_user", "secret_sauce")
+    page.wait_for_url("**/inventory.html")
+
+    # Сортируем
+    inventory_page.sort_items_by("Name (A to Z)")
+
+    # Получаем имена товаров
+    names = inventory_page.get_item_titles()
+
+    # Проверяем сортировку
+    assert names == sorted(names), "Товары не отсортированы по алфавиту!"
