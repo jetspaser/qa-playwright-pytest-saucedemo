@@ -17,7 +17,7 @@ class InventoryPage:
     INVENTORY_ITEM = ".inventory_item"
     INVENTORY_ITEM_NAME = ".inventory_item_name"
     INVENTORY_ITEM_TITLE = ".inventory_details_name"
-    SORT_DROPDOWN = "[data-test='product_sort_container']"
+    SORT_DROPDOWN = '[data-test="product-sort-container"]'
 
     def __init__(self, page):
         """Сохраняем ссылку на страницу Playwright."""
