@@ -80,3 +80,10 @@ class InventoryPage:
         """
         title = self.page.text_content(self.INVENTORY_ITEM_TITLE)
         return expected_name.strip() in title.strip()
+
+    def get_active_sort_option(self):
+        """
+        Возвращает текущую выбранную опцию сортировки.
+        Это удобно для проверок в тестах.
+        """
+        return self.page.locator("[data-test='active-option']").text_content()
