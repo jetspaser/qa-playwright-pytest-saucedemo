@@ -87,3 +87,11 @@ class InventoryPage:
         Это удобно для проверок в тестах.
         """
         return self.page.locator("[data-test='active-option']").text_content()
+
+    def get_item_prices(self):
+        """
+        Возвращает список цен товаров в виде float.
+        Поможет для тестов сортировки по цене.
+        """
+        prices_raw = self.page.locator("[data-test='inventory-item-price']").all_text_contents()
+        return [float(p.replace("$", "")) for p in prices_raw]
