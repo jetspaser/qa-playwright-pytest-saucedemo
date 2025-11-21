@@ -95,3 +95,9 @@ class InventoryPage:
         """
         prices_raw = self.page.locator("[data-test='inventory-item-price']").all_text_contents()
         return [float(p.replace("$", "")) for p in prices_raw]
+
+    # TODO:
+    # Добавить методы для взаимодействия с корзиной:
+    # - add_item_to_cart()
+    # - remove_item_from_cart()
+    # - get_cart_count()
