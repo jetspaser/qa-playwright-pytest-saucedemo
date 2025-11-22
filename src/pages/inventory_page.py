@@ -101,3 +101,5 @@ class InventoryPage:
     # - add_item_to_cart()
     # - remove_item_from_cart()
     # - get_cart_count()
+    # TODO: подумать над вынесением price/filters в отдельный компонент
+
