@@ -50,3 +50,33 @@
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+
+# Установить зависимости
+pip install -r requirements.txt
+
+# Запустить все тесты
+pytest
+
+# Запустить только UI-тесты
+pytest -m ui
+
+# UI-тесты с открытием браузера
+pytest -m ui --headed
+
+# Запустить только API-тесты
+pytest -m api
+
+# Запустить конкретный тест
+pytest tests/ui/test_inventory.py::test_sort_by_name_atoz
+
+# Сгенерировать HTML-отчёт
+pytest --html=reports/report.html --self-contained-html
+
+# Запуск UI-тестов в выбранном браузере
+pytest -m ui --browser chromium
+pytest -m ui --browser firefox
+pytest -m ui --browser webkit
+
+# Параллельный запуск тестов (если установлен pytest-xdist)
+pytest -n auto
+
