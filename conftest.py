@@ -43,3 +43,18 @@ def pytest_runtest_makereport(item, call):
 
     print(f"\n[ARTIFACT] saved screenshot: {screenshot_path}")
     print(f"[ARTIFACT] saved html: {html_path}")
+
+
+import pytest
+from src.api.api_client import APIClient
+
+
+@pytest.fixture
+def api_client():
+    """
+    Фикстура, создающая API-клиент.
+    Будет доступна во всех API-тестах.
+    """
+    # Используем JSONPlaceholder — стабильный тестовый API
+    return APIClient("https://jsonplaceholder.typicode.com")
+
