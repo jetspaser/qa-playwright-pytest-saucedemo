@@ -1,6 +1,10 @@
 import os
+import sys
 import pytest
 from datetime import datetime
+
+# Добавляем корень проекта в PYTHONPATH
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Создаём папку reports, если её нет
 os.makedirs("reports", exist_ok=True)
@@ -8,53 +12,38 @@ os.makedirs("reports", exist_ok=True)
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """
-    Хук, который сохраняет артефакты только если тест УПАЛ.
-    Защищён от ошибок: если браузер закрыт — ничего не делаем.
-    """
+    """Сохраняем артефакты при падении теста."""
     outcome = yield
     rep = outcome.get_result()
 
-    # Скриншот только при падении на этапе выполнения теста
     if rep.when != "call" or not rep.failed:
         return
 
     page = item.funcargs.get("page")
-    if page is None:
+    if not page:
         return
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     base = f"reports/{item.name}_{timestamp}"
 
-    screenshot_path = f"{base}.png"
-    html_path = f"{base}.html"
-
-    # Пытаемся сохранить артефакты
     try:
-        page.screenshot(path=screenshot_path)
+        page.screenshot(path=f"{base}.png")
     except Exception:
-        return  # браузер закрыт → просто выходим
+        return
 
     try:
-        with open(html_path, "w", encoding="utf-8") as f:
+        with open(f"{base}.html", "w", encoding="utf-8") as f:
             f.write(page.content())
     except Exception:
         pass
 
-    print(f"\n[ARTIFACT] saved screenshot: {screenshot_path}")
-    print(f"[ARTIFACT] saved html: {html_path}")
 
+# ==== API CLIENT FIXTURE ====
 
-import pytest
 from src.api.api_client import APIClient
 
 
 @pytest.fixture
 def api_client():
-    """
-    Фикстура, создающая API-клиент.
-    Будет доступна во всех API-тестах.
-    """
-    # Используем JSONPlaceholder — стабильный тестовый API
+    """Создаёт API-клиент для API-тестов."""
     return APIClient("https://jsonplaceholder.typicode.com")
-
