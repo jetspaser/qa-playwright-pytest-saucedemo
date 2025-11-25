@@ -1,0 +1,10 @@
+README.txt
+setup.py
+qa_playwright_saucedemo.egg-info/PKG-INFO
+qa_playwright_saucedemo.egg-info/SOURCES.txt
+qa_playwright_saucedemo.egg-info/dependency_links.txt
+qa_playwright_saucedemo.egg-info/top_level.txt
+src/__init__.py
+src/pages/__init__.py
+src/pages/inventory_page.py
+src/pages/login_page.py
