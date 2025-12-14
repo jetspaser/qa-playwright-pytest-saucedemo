@@ -80,3 +80,11 @@ pytest -m ui --browser webkit
 # Параллельный запуск тестов (если установлен pytest-xdist)
 pytest -n auto
 
+#requirements - зависимости
+
+pytest==7.4.0
+playwright==1.40.0
+pytest-playwright==0.4.3
+requests==2.31.0
+
+
