@@ -99,8 +99,7 @@ browser – браузер
 
 login_page – готовая страница логина
 
-base_url – базовый URL приложения (https://www.saucedemo.com/
-)
+base_url – базовый URL приложения (https://www.saucedemo.com/)
 
 ✅ Примеры тестов
 
