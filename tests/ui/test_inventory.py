@@ -1,62 +1,61 @@
 import pytest
-import time
+from playwright.sync_api import Page
+
 from src.pages.login_page import LoginPage
 from src.pages.inventory_page import InventoryPage
 
 
 @pytest.mark.ui
-def test_open_product_from_inventory(page, base_url):
+def test_open_product_from_inventory(page: Page, base_url: str) -> None:
     """
-    Проверка перехода с главной страницы (inventory)
-    на страницу товара.
+    Проверка перехода с inventory-страницы
+    в карточку товара.
+
     Шаги:
     1. Логинимся под стандартным пользователем
-    2. Проверяем, что список товаров отображается
-    3. Кликаем по первому товару
-    4. Проверяем, что открылась страница товара
+    2. Проверяем, что inventory страница открыта
+    3. Открываем карточку первого товара
+    4. Проверяем, что открылась корректная карточка
     """
 
-    # Инициализация объектов страниц
     login_page = LoginPage(page)
     inventory_page = InventoryPage(page)
 
-    # 1️⃣ Заходим на страницу логина
+    # 1️⃣ Логин
     login_page.open(base_url)
     login_page.login("standard_user", "secret_sauce")
 
-    # 2️⃣ Проверяем, что страница inventory загрузилась
-    assert inventory_page.is_loaded(), "Inventory page did not load!"
+    # 2️⃣ Проверка загрузки inventory
+    assert inventory_page.is_opened(), "Inventory page did not open!"
 
-    # 3️⃣ Получаем название первого товара
-    first_item_name = inventory_page.get_first_item_name()
-    assert first_item_name, "No items found on inventory page!"
+    # 3️⃣ Открываем первый товар и сохраняем его имя
+    first_item_name = inventory_page.open_first_item()
+    assert first_item_name, "Failed to get first item name!"
 
-    # 4️⃣ Кликаем по первому товару
-    inventory_page.open_first_item()
-
-    # 5️⃣ Проверяем, что открылся экран товара
+    # 4️⃣ Проверяем, что открылась нужная карточка товара
     assert inventory_page.is_product_page_open(first_item_name), "Product page not opened!"
 
-    time.sleep(1)
 
 @pytest.mark.ui
-def test_sort_by_name_atoz(page, base_url):
+def test_sort_by_name_atoz(page: Page, base_url: str) -> None:
     """
-    Проверяем сортировку товаров по имени (A → Z).
+    Проверка сортировки товаров по имени (A → Z).
     """
+
     login_page = LoginPage(page)
     inventory_page = InventoryPage(page)
 
-    # Логинимся
+    # Логин
     login_page.open(base_url)
     login_page.login("standard_user", "secret_sauce")
-    page.wait_for_url("**/inventory.html")
 
-    # Сортируем
+    assert inventory_page.is_opened(), "Inventory page did not open!"
+
+    # Сортировка
     inventory_page.sort_items_by("Name (A to Z)")
 
-    # Получаем имена товаров
+    # Получаем список имён товаров
     names = inventory_page.get_item_titles()
 
-    # Проверяем сортировку
-    assert names == sorted(names), "Товары не отсортированы по алфавиту!"
+    # Проверка сортировки
+    assert names == sorted(names), "Items are not sorted A to Z!"

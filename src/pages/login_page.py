@@ -1,69 +1,62 @@
+from playwright.sync_api import Page
+
+
 class LoginPage:
-    # ====== ЛОКАТОРЫ (селекторы) элементов страницы ======
-    # Поле ввода логина
+    """
+    Page Object для страницы логина SauceDemo.
+    Инкапсулирует все действия и проверки,
+    связанные со страницей авторизации.
+    """
+
+    # ====== ЛОКАТОРЫ ======
     USERNAME = "input#user-name"
-    # Поле ввода пароля
     PASSWORD = "input#password"
-    # Кнопка "Login"
     LOGIN_BTN = "input#login-button"
-    # Сообщение об ошибке (появляется при неправильных данных)
     ERROR_MESSAGE = "[data-test='error']"
 
-    def __init__(self, page):
+    def __init__(self, page: Page) -> None:
         """
-        Конструктор страницы.
-        В него передаётся объект page (страница браузера),
-        который предоставляет Playwright.
+        Конструктор LoginPage.
 
-        self.page — ссылка на открытую вкладку браузера.
-        Через неё мы взаимодействуем с элементами.
+        :param page: Объект Page Playwright (вкладка браузера)
         """
         self.page = page
 
-    def open(self, base_url):
-        self.page.goto(base_url, timeout=120000)  # 120s
+    def open(self, base_url: str) -> None:
         """
-        Открываем страницу логина.
-        base_url передаётся из фикстуры (conftest.py),
-        чтобы в будущем можно было легко переключать окружения.
-        """
-        self.page.goto(base_url)
+        Открывает страницу логина.
 
-    def login(self, username, password):
+        :param base_url: Базовый URL приложения
+                         (например https://www.saucedemo.com/)
         """
-        Выполняем авторизацию:
-        1. Вводим логин
-        2. Вводим пароль
-        3. Нажимаем кнопку Login
+        if not base_url:
+            raise ValueError("base_url пустой. Проверь фикстуру base_url в conftest.py")
 
-        Этот метод скрывает детали Selenium/Playwright
-        и делает тест читабельным: login_page.login("user", "pass")
+        self.page.goto(base_url, timeout=120_000)
+
+    def login(self, username: str, password: str) -> None:
+        """
+        Выполняет авторизацию пользователя.
+
+        :param username: Имя пользователя
+        :param password: Пароль
         """
         self.page.fill(self.USERNAME, username)
         self.page.fill(self.PASSWORD, password)
         self.page.click(self.LOGIN_BTN)
 
-    def is_error_visible(self):
+    def is_error_visible(self) -> bool:
         """
-        Проверяем, появилось ли сообщение об ошибке.
-        Используется в негативных тестах.
-        Возвращает True/False.
+        Проверяет, отображается ли сообщение об ошибке.
 
-        Если завтра селектор сменится — меняем его здесь,
-        тесты НЕ придётся трогать.
+        :return: True, если сообщение об ошибке видно
         """
-        return self.page.is_visible(self.ERROR_MESSAGE)
+        return self.page.locator(self.ERROR_MESSAGE).is_visible()
 
-    def get_error_text(self):
+    def get_error_text(self) -> str | None:
         """
-        Возвращает ТЕКСТ сообщения об ошибке.
-        Это важно для точного сравнения:
-        например, проверять конкретный текст ошибки,
-        а не просто факт её отображения.
+        Возвращает текст сообщения об ошибке.
 
-        Возвращает строку или None, если элемента нет.
+        :return: Текст ошибки или None, если элемент отсутствует
         """
         return self.page.text_content(self.ERROR_MESSAGE)
-
-
-

@@ -1,47 +1,45 @@
 ﻿import pytest
-import time
-from src.pages.login_page import LoginPage
-from src.pages.inventory_page import InventoryPage
+from playwright.sync_api import Page
 
 
-@pytest.mark.ui
-def test_login_wrong_password(page, base_url):
+# Если в будущем используем POM, импортируем здесь:
+# from src.pages.login_page import LoginPage
+
+def test_login_success(login_page: Page) -> None:
     """
-    Негативный тест: логин с неправильным паролем
-    должен показывать пользователю сообщение об ошибке.
+    Успешная авторизация стандартным пользователем.
+
+    Шаги:
+    1. Вводим username и password.
+    2. Нажимаем кнопку логина.
+    3. Проверяем переход на страницу Inventory.
     """
-    login_page = LoginPage(page)
+    # Ввод логина и пароля
+    login_page.fill("input[data-test='username']", "standard_user")
+    login_page.fill("input[data-test='password']", "secret_sauce")
 
-    # Шаг 1: открыли страницу логина
-    login_page.open(base_url)
+    # Нажатие кнопки Login
+    login_page.click("input[data-test='login-button']")
 
-    # Шаг 2: вводим неверный пароль
-    login_page.login("standard_user", "wrong_pass")
+    # Проверка URL и наличия элементов на странице Inventory
+    assert "inventory.html" in login_page.url
+    assert login_page.locator(".inventory_list").is_visible()
 
-    # Шаг 3: проверяем, что появилось сообщение об ошибке
-    assert login_page.is_error_visible(), "Ошибка не отображается!"
 
-    # Шаг 4: проверяем сам текст ошибки
-    text = login_page.get_error_text()
-    assert "do not match" in text, "Текст ошибки неверный!"
-
-@pytest.mark.ui
-def test_login_wrong_username(page, base_url):
+def test_login_fail_invalid_password(login_page: Page) -> None:
     """
-    Негативный тест: логин с неправильным username
-    должен показывать ошибку на странице.
+    Попытка авторизации с неправильным паролем.
+
+    Шаги:
+    1. Вводим username.
+    2. Вводим неверный password.
+    3. Проверяем появление ошибки.
     """
-    login_page = LoginPage(page)
+    login_page.fill("input[data-test='username']", "standard_user")
+    login_page.fill("input[data-test='password']", "wrong_password")
+    login_page.click("input[data-test='login-button']")
 
-    # Шаг 1: открыли страницу логина
-    login_page.open(base_url)
-
-    # Шаг 2: вводим неверный логин
-    login_page.login("wrong_user", "secret_sauce")
-
-    # Шаг 3: проверяем, что появилось сообщение об ошибке
-    assert login_page.is_error_visible(), "Ошибка не отображается!"
-
-    # Шаг 4: проверяем текст ошибки
-    text = login_page.get_error_text()
-    assert "do not match" in text or "Username and password" in text, "Текст ошибки неверный!"
+    # Проверка сообщения об ошибке
+    error_message = login_page.locator("h3[data-test='error']")
+    assert error_message.is_visible()
+    assert "Username and password do not match" in error_message.inner_text()

@@ -1,15 +1,15 @@
+from playwright.sync_api import Page
+
+
 class InventoryPage:
     """
     Page Object страницы списка товаров (inventory.html).
 
-    Здесь мы собираем ВСЕ действия, которые можно выполнить на странице:
+    Инкапсулирует все действия и проверки страницы:
     - проверка загрузки
     - сортировка
-    - получение списка товаров
-    - открытие карточки товара
-    и др.
-
-    Благодаря этому тесты остаются чистыми и читаемыми.
+    - работа со списком товаров
+    - переход в карточку товара
     """
 
     # ====== ЛОКАТОРЫ ======
@@ -18,88 +18,102 @@ class InventoryPage:
     INVENTORY_ITEM_NAME = ".inventory_item_name"
     INVENTORY_ITEM_TITLE = ".inventory_details_name"
     SORT_DROPDOWN = '[data-test="product-sort-container"]'
+    ACTIVE_SORT_OPTION = "[data-test='active-option']"
+    ITEM_PRICE = "[data-test='inventory-item-price']"
 
-    def __init__(self, page):
-        """Сохраняем ссылку на страницу Playwright."""
+    def __init__(self, page: Page) -> None:
+        """
+        Конструктор InventoryPage.
+
+        :param page: Объект Page Playwright
+        """
         self.page = page
 
     # ----------------------------
-    #     Проверки загрузки
+    #     Проверки страницы
     # ----------------------------
-    def is_loaded(self):
-        """Проверяем, что список товаров отображается."""
-        return self.page.is_visible(self.INVENTORY_LIST)
+    def is_opened(self) -> bool:
+        """
+        Проверяет, что страница inventory загружена.
+
+        :return: True, если список товаров отображается
+        """
+        return self.page.locator(self.INVENTORY_LIST).is_visible()
 
     # ----------------------------
     #     Сортировка товаров
     # ----------------------------
-    def sort_items_by(self, option_text: str):
+    def sort_items_by(self, option_text: str) -> None:
         """
-        Выполняет сортировку товаров.
+        Выполняет сортировку товаров по заданной опции.
 
-        option_text — текст опции сортировки:
-        - 'Name (A to Z)'
-        - 'Name (Z to A)'
-        - 'Price (low to high)'
-        - 'Price (high to low)'
+        :param option_text: Текст опции сортировки, например:
+                            - 'Name (A to Z)'
+                            - 'Name (Z to A)'
+                            - 'Price (low to high)'
+                            - 'Price (high to low)'
         """
         self.page.select_option(self.SORT_DROPDOWN, label=option_text)
 
-    # ----------------------------
-    #     Чтение списка товаров
-    # ----------------------------
-    def get_item_titles(self):
+    def get_active_sort_option(self) -> str:
         """
-        Возвращает список ИМЕН товаров в текущем порядке.
-        Используется в тестах сортировки.
+        Возвращает текущую выбранную опцию сортировки.
+
+        :return: Название активной сортировки
+        """
+        return self.page.locator(self.ACTIVE_SORT_OPTION).text_content()
+
+    # ----------------------------
+    #     Список товаров
+    # ----------------------------
+    def get_item_titles(self) -> list[str]:
+        """
+        Возвращает список названий товаров в текущем порядке.
+
+        :return: Список названий товаров
         """
         return self.page.locator(self.INVENTORY_ITEM_NAME).all_text_contents()
 
-    def get_items_count(self):
+    def get_items_count(self) -> int:
         """
         Возвращает количество товаров на странице.
-        Полезно для smoke-тестов.
+
+        :return: Количество товаров
         """
         return self.page.locator(self.INVENTORY_ITEM).count()
 
     # ----------------------------
     #     Работа с товаром
     # ----------------------------
-    def get_first_item_name(self):
-        """Получаем название первого товара."""
-        return self.page.text_content(self.INVENTORY_ITEM_NAME)
-
-    def open_first_item(self):
-        """Открываем карточку первого товара."""
-        self.page.click(self.INVENTORY_ITEM_NAME)
-
-    def is_product_page_open(self, expected_name):
+    def open_first_item(self) -> str:
         """
-        Проверяем что в карточке товара открыт тот,
-        на который кликнули.
+        Открывает карточку первого товара.
+
+        :return: Название товара, по которому был клик
         """
-        title = self.page.text_content(self.INVENTORY_ITEM_TITLE)
+        first_item = self.page.locator(self.INVENTORY_ITEM_NAME).first
+        item_name = first_item.text_content()
+        first_item.click()
+        return item_name
+
+    def is_product_page_open(self, expected_name: str) -> bool:
+        """
+        Проверяет, что открыта карточка ожидаемого товара.
+
+        :param expected_name: Название товара
+        :return: True, если заголовок совпадает
+        """
+        title = self.page.locator(self.INVENTORY_ITEM_TITLE).text_content()
         return expected_name.strip() in title.strip()
 
-    def get_active_sort_option(self):
+    # ----------------------------
+    #     Цены товаров
+    # ----------------------------
+    def get_item_prices(self) -> list[float]:
         """
-        Возвращает текущую выбранную опцию сортировки.
-        Это удобно для проверок в тестах.
-        """
-        return self.page.locator("[data-test='active-option']").text_content()
+        Возвращает список цен товаров.
 
-    def get_item_prices(self):
+        :return: Список цен в формате float
         """
-        Возвращает список цен товаров в виде float.
-        Поможет для тестов сортировки по цене.
-        """
-        prices_raw = self.page.locator("[data-test='inventory-item-price']").all_text_contents()
-        return [float(p.replace("$", "")) for p in prices_raw]
-
-    # TODO:
-    # Добавить методы для взаимодействия с корзиной:
-    # - add_item_to_cart()
-    # - remove_item_from_cart()
-    # - get_cart_count()
-    # TODO: подумать над вынесением price/filters в отдельный компонент
-
+        prices_raw = self.page.locator(self.ITEM_PRICE).all_text_contents()
+        return [float(price.replace("$", "")) for price in prices_raw]

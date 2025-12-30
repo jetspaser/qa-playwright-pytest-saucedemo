@@ -1,57 +1,50 @@
-import os
-import sys
+from typing import Generator
 import pytest
-from datetime import datetime
+from playwright.sync_api import Page, Browser, BrowserContext, sync_playwright
 
-# === 1. Абсолютный путь к src ===
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-SRC_PATH = os.path.join(BASE_DIR, "src")
+@pytest.fixture(scope="session")
+def base_url() -> str:
+    """
+    Базовый URL приложения SauceDemo.
+    """
+    return "https://www.saucedemo.com/"
 
-# Проверяем что src существует
-print("DEBUG SRC_PATH:", SRC_PATH)
-print("DEBUG exists:", os.path.isdir(SRC_PATH))
+@pytest.fixture(scope="session")
+def browser() -> Generator[Browser, None, None]:
+    """
+    Fixture для запуска браузера на всю сессию тестирования.
+    Возвращает объект Browser.
+    """
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        yield browser
+        browser.close()
 
-# Добавляем src в PYTHONPATH
-if SRC_PATH not in sys.path:
-    sys.path.insert(0, SRC_PATH)
+@pytest.fixture(scope="function")
+def context(browser: Browser) -> Generator[BrowserContext, None, None]:
+    """
+    Fixture для создания нового контекста браузера на каждый тест.
+    Позволяет тестам быть изолированными.
+    """
+    ctx = browser.new_context()
+    yield ctx
+    ctx.close()
 
-print("DEBUG sys.path:", sys.path)
+@pytest.fixture(scope="function")
+def page(context: BrowserContext) -> Generator[Page, None, None]:
+    """
+    Fixture для получения страницы (Page) Playwright.
+    Каждый тест получает чистую страницу.
+    """
+    page = context.new_page()
+    yield page
+    page.close()
 
-# === 2. Теперь импортируем APIClient ===
-from api.api_client import APIClient
-
-
-# === 3. Создаём reports ===
-os.makedirs("reports", exist_ok=True)
-
-
-@pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_makereport(item, call):
-    outcome = yield
-    rep = outcome.get_result()
-
-    if rep.when != "call" or not rep.failed:
-        return
-
-    page = item.funcargs.get("page")
-    if not page:
-        return
-
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    base = f"reports/{item.name}_{timestamp}"
-
-    try:
-        page.screenshot(path=f"{base}.png")
-    except Exception:
-        return
-
-    try:
-        with open(f"{base}.html", "w", encoding="utf-8") as f:
-            f.write(page.content())
-    except Exception:
-        pass
-
-
-@pytest.fixture
-def api_client():
-    return APIClient("https://jsonplaceholder.typicode.com")
+@pytest.fixture(scope="function")
+def login_page(page: Page) -> Page:
+    """
+    Fixture для перехода на страницу логина SauceDemo.
+    Возвращает страницу, готовую к взаимодействию в тестах.
+    """
+    page.goto("https://www.saucedemo.com/")
+    return page
